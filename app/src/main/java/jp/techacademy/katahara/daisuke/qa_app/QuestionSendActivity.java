@@ -39,7 +39,7 @@ import java.util.Map;
 
 public class QuestionSendActivity extends AppCompatActivity implements View.OnClickListener, DatabaseReference.CompletionListener {
 
-    private static final int PERMISSION_REQUEST_CODE = 100;
+    private static final int PERMISSIONS_REQUEST_CODE = 100;
     private static final int CHOOSER_REQUEST_CODE = 100;
 
     private ProgressDialog mProgress;
@@ -74,11 +74,13 @@ public class QuestionSendActivity extends AppCompatActivity implements View.OnCl
 
         mProgress = new ProgressDialog(this);
         mProgress.setMessage("投稿中...");
+
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == CHOOSER_REQUEST_CODE) {
+
             if (resultCode != RESULT_OK) {
                 if (mPictureUri != null) {
                     getContentResolver().delete(mPictureUri, null, null);
@@ -101,15 +103,15 @@ public class QuestionSendActivity extends AppCompatActivity implements View.OnCl
                 return;
             }
 
-            // 取得したBitmapの長編を500ピクセルにリサイズする
-            int imageWideth = image.getWidth();
+            // 取得したBimapの長辺を500ピクセルにリサイズする
+            int imageWidth = image.getWidth();
             int imageHeight = image.getHeight();
-            float scale = Math.min((float)  500 / imageWideth, (float) 500 / imageHeight); // (1)
+            float scale = Math.min((float) 500 / imageWidth, (float) 500 / imageHeight); // (1)
 
             Matrix matrix = new Matrix();
             matrix.postScale(scale, scale);
 
-            Bitmap resizedImage = Bitmap.createBitmap(image, 0, 0, imageWideth, imageHeight, matrix, true);
+            Bitmap resizedImage =  Bitmap.createBitmap(image, 0, 0, imageWidth, imageHeight, matrix, true);
 
             // BitmapをImageViewに設定する
             mImageView.setImageBitmap(resizedImage);
@@ -128,7 +130,7 @@ public class QuestionSendActivity extends AppCompatActivity implements View.OnCl
                     showChooser();
                 } else {
                     // 許可されていないので許可ダイアログを表示する
-                    requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+                    requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSIONS_REQUEST_CODE);
 
                     return;
                 }
@@ -136,12 +138,12 @@ public class QuestionSendActivity extends AppCompatActivity implements View.OnCl
                 showChooser();
             }
         } else if (v == mSendButton) {
-            // キーボードが出ていたら閉じる
+            // キーボードが出てたら閉じる
             InputMethodManager im = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
             im.hideSoftInputFromWindow(v.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
 
-            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-            DatabaseReference genreRef = databaseReference.child(Const.ContentsPATH).child(String.valueOf(mGenre));
+            DatabaseReference dataBaseReference = FirebaseDatabase.getInstance().getReference();
+            DatabaseReference genreRef = dataBaseReference.child(Const.ContentsPATH).child(String.valueOf(mGenre));
 
             Map<String, String> data = new HashMap<String, String>();
 
@@ -153,8 +155,8 @@ public class QuestionSendActivity extends AppCompatActivity implements View.OnCl
             String body = mBodyText.getText().toString();
 
             if (title.length() == 0) {
-                // 質問が入力されていないときはエラーを表示するだけ
-                Snackbar.make(v, "質問を入力してください", Snackbar.LENGTH_LONG).show();
+                // 質問が入力されていない時はエラーを表示するだけ
+                Snackbar.make(v, "タイトルを入力して下さい", Snackbar.LENGTH_LONG).show();
                 return;
             }
 
@@ -175,7 +177,7 @@ public class QuestionSendActivity extends AppCompatActivity implements View.OnCl
             // 添付画像を取得する
             BitmapDrawable drawable = (BitmapDrawable) mImageView.getDrawable();
 
-            // 添付画像が設定されていれば画像を取り出してBase64エンコードする
+            // 添付画像が設定されていれば画像を取り出してBASE64エンコードする
             if (drawable != null) {
                 Bitmap bitmap = drawable.getBitmap();
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -191,11 +193,11 @@ public class QuestionSendActivity extends AppCompatActivity implements View.OnCl
     }
 
     @Override
-    public void onRequestPermissionResult(int requestCode, String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
-            case PERMISSION_REQUEST_CODE: {
+            case PERMISSIONS_REQUEST_CODE: {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // ユーザーが許可した時
+                    // ユーザーが許可したとき
                     showChooser();
                 }
                 return;
@@ -214,18 +216,19 @@ public class QuestionSendActivity extends AppCompatActivity implements View.OnCl
         ContentValues values = new ContentValues();
         values.put(MediaStore.Images.Media.TITLE, filename);
         values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
-        mPictureUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+        mPictureUri = getContentResolver()
+                .insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
 
         Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mPictureUri);
 
-        // ギャラリー選択のIntentを与えてcreateChooseメソッドを呼ぶ
+        // ギャラリー選択のIntentを与えてcreateChooserメソッドを呼ぶ
         Intent chooserIntent = Intent.createChooser(galleryIntent, "画像を取得");
 
-        // EXTRA_INITIAL_INTENTSにカメラ撮影のIntentを追加
+        // EXTRA_INITIAL_INTENTS にカメラ撮影のIntentを追加
         chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{cameraIntent});
 
-        startActivity(chooserIntent, CHOOSER_REQUEST_CODE);
+        startActivityForResult(chooserIntent, CHOOSER_REQUEST_CODE);
     }
 
     @Override
