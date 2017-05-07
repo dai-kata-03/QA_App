@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ListView;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -24,6 +25,9 @@ public class QuestionDetailActivity extends AppCompatActivity {
     private QuestionDetailListAdapter mAdapter;
 
     private DatabaseReference mAnswerRef;
+    private DatabaseReference mQuestionRef; // 課題用の追加
+
+    private String favor = mQuestion.getFavor();
 
     private ChildEventListener mEventListener = new ChildEventListener() {
         @Override
@@ -69,6 +73,44 @@ public class QuestionDetailActivity extends AppCompatActivity {
         }
     };
 
+    // 課題用の追加 Start
+    private ChildEventListener mmEventListener = new ChildEventListener() {
+        @Override
+        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            HashMap map = (HashMap) dataSnapshot.getValue();
+
+            String answerUid = dataSnapshot.getKey();
+            String body = (String) map.get("body");
+            String name = (String) map.get("name");
+            String uid = (String) map.get("uid");
+
+            /*
+            ここにどのような処理を入れればよいのか、またそもそもこのメソッド内での処理で間違いないのか。。
+            */
+        }
+
+        @Override
+        public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+        }
+
+        @Override
+        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
+        }
+    };
+    // 課題用の追加 End
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -105,6 +147,24 @@ public class QuestionDetailActivity extends AppCompatActivity {
                 }
             }
         });
+
+        // 課題用の追加 Start
+        Button favorButton = (Button) findViewById(R.id.favor_button);
+        favorButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (favor == "") {
+                    favor = "1";
+                } else {
+                    favor = "";
+                }
+
+                DatabaseReference dataBaseReference = FirebaseDatabase.getInstance().getReference();
+                mQuestionRef = dataBaseReference.child(Const.ContentsPATH).child(String.valueOf(mQuestion.getGenre())).child(mQuestion.getQuestionUid());
+                mQuestionRef.addChildEventListener(mmEventListener);
+            }
+        });
+        // 課題用の追加 End
 
         DatabaseReference dataBaseReference = FirebaseDatabase.getInstance().getReference();
         mAnswerRef = dataBaseReference.child(Const.ContentsPATH).child(String.valueOf(mQuestion.getGenre())).child(mQuestion.getQuestionUid()).child(Const.AnswerPATH);

@@ -3,12 +3,15 @@ package jp.techacademy.katahara.daisuke.qa_app;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 
 /**
  * Created by Daisuke on 2017/05/03.
@@ -71,6 +74,19 @@ public class QuestionDetailListAdapter extends BaseAdapter {
 
             TextView nameTextView = (TextView) convertView.findViewById(R.id.nameTextView);
             nameTextView.setText(name);
+
+            // 課題用の追加 Start
+            String favor = mQustion.getFavor();
+
+            Button favorButton = (Button) convertView.findViewById(R.id.favor_button);
+            if (favor == "") {
+                favorButton.setText("お気に入りに追加する");
+                favorButton.setBackgroundColor(Color.rgb(140,140,140));
+            } else {
+                favorButton.setText("お気に入りに追加済み");
+                favorButton.setBackgroundColor(Color.rgb(82,162,197));
+            }
+            // 課題用の追加 End
 
             byte[] bytes = mQustion.getImageBytes();
             if (bytes.length != 0) {
